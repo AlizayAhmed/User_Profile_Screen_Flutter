@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'screens/user_profile_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -31,12 +32,16 @@ class _AuthScreenState extends State<AuthScreen>
   bool isLogin = true;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
+  bool _isLoading = false;
 
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   final _nameController = TextEditingController();
+
+  // Store registered users (in production, use a real database)
+  static final Map<String, Map<String, String>> _registeredUsers = {};
 
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
@@ -64,22 +69,138 @@ class _AuthScreenState extends State<AuthScreen>
     super.dispose();
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // This ensures form is cleared when returning to this screen
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Small delay to ensure smooth transition
+      Future.delayed(const Duration(milliseconds: 100), () {
+        if (mounted) {
+          _clearForm();
+        }
+      });
+    });
+  }
+
+  void _clearForm() {
+    _emailController.clear();
+    _passwordController.clear();
+    _confirmPasswordController.clear();
+    _nameController.clear();
+    _formKey.currentState?.reset();
+    setState(() {
+      _obscurePassword = true;
+      _obscureConfirmPassword = true;
+    });
+  }
+
   void _toggleMode() {
     setState(() {
       isLogin = !isLogin;
+      _clearForm();
       _animationController.reset();
       _animationController.forward();
     });
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     if (_formKey.currentState!.validate()) {
-      // Navigate to home screen
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const HomeScreen()),
-      );
+      setState(() => _isLoading = true);
+
+      // Simulate network delay for auth
+      await Future.delayed(const Duration(milliseconds: 800));
+
+      final String email = _emailController.text.toLowerCase().trim();
+      final String password = _passwordController.text;
+
+      if (isLogin) {
+        // Login logic
+        if (_registeredUsers.containsKey(email)) {
+          if (_registeredUsers[email]!['password'] == password) {
+            // Successful login
+            final userName = _registeredUsers[email]!['name']!;
+            setState(() => _isLoading = false);
+            _navigateToProfile(userName, email);
+          } else {
+            // Wrong password
+            setState(() => _isLoading = false);
+            _showError('Incorrect password. Please try again.');
+          }
+        } else {
+          // User not found
+          setState(() => _isLoading = false);
+          _showError('No account found with this email. Please sign up.');
+        }
+      } else {
+        // Signup logic
+        if (_registeredUsers.containsKey(email)) {
+          // Email already exists
+          setState(() => _isLoading = false);
+          _showError('Account already exists. Please login.');
+        } else {
+          // Register new user
+          final String userName = _nameController.text.trim();
+          _registeredUsers[email] = {
+            'name': userName,
+            'password': password,
+          };
+          
+          setState(() => _isLoading = false);
+          _showSuccess('Account created successfully!');
+          
+          // Auto-navigate to profile after signup
+          await Future.delayed(const Duration(milliseconds: 500));
+          _navigateToProfile(userName, email);
+        }
+      }
     }
+  }
+
+  void _navigateToProfile(String userName, String userEmail) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => UserProfilePage(
+          userName: userName,
+          userEmail: userEmail,
+          onLogout: () {
+            _clearForm(); // Clear the login/signup form immediately on logout
+          },
+          onUsernameUpdate: (newName) => _handleUsernameUpdate(userEmail, newName),
+        ),
+      ),
+    );
+  }
+
+  void _handleUsernameUpdate(String email, String newName) {
+    if (_registeredUsers.containsKey(email)) {
+      _registeredUsers[email]!['name'] = newName;
+    }
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.redAccent,
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.all(16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+    );
+  }
+
+  void _showSuccess(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.greenAccent,
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.all(16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+    );
   }
 
   @override
@@ -185,6 +306,9 @@ class _AuthScreenState extends State<AuthScreen>
                                   if (value == null || value.isEmpty) {
                                     return 'Please enter your name';
                                   }
+                                  if (value.trim().length < 2) {
+                                    return 'Name must be at least 2 characters';
+                                  }
                                   return null;
                                 },
                               ),
@@ -281,13 +405,17 @@ class _AuthScreenState extends State<AuthScreen>
                               Align(
                                 alignment: Alignment.centerRight,
                                 child: TextButton(
-                                  onPressed: () {},
+                                  onPressed: () {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text('Password reset feature coming soon!'),
+                                      ),
+                                    );
+                                  },
                                   child: Text(
                                     'Forgot Password?',
                                     style: TextStyle(
-                                      color: Colors.purpleAccent.withOpacity(
-                                        0.8,
-                                      ),
+                                      color: Colors.purpleAccent.withOpacity(0.8),
                                       fontSize: 14,
                                     ),
                                   ),
@@ -302,7 +430,7 @@ class _AuthScreenState extends State<AuthScreen>
                               width: double.infinity,
                               height: 55,
                               child: ElevatedButton(
-                                onPressed: _submit,
+                                onPressed: _isLoading ? null : _submit,
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: Colors.transparent,
                                   shadowColor: Colors.transparent,
@@ -314,23 +442,37 @@ class _AuthScreenState extends State<AuthScreen>
                                 child: Ink(
                                   decoration: BoxDecoration(
                                     gradient: LinearGradient(
-                                      colors: [
-                                        Colors.purpleAccent.withOpacity(0.8),
-                                        Colors.blueAccent.withOpacity(0.8),
-                                      ],
+                                      colors: _isLoading
+                                          ? [
+                                              Colors.grey.withOpacity(0.5),
+                                              Colors.grey.withOpacity(0.5),
+                                            ]
+                                          : [
+                                              Colors.purpleAccent.withOpacity(0.8),
+                                              Colors.blueAccent.withOpacity(0.8),
+                                            ],
                                     ),
                                     borderRadius: BorderRadius.circular(15),
                                   ),
                                   child: Container(
                                     alignment: Alignment.center,
-                                    child: Text(
-                                      isLogin ? 'Sign In' : 'Sign Up',
-                                      style: const TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                      ),
-                                    ),
+                                    child: _isLoading
+                                        ? const SizedBox(
+                                            height: 20,
+                                            width: 20,
+                                            child: CircularProgressIndicator(
+                                              color: Colors.white,
+                                              strokeWidth: 2,
+                                            ),
+                                          )
+                                        : Text(
+                                            isLogin ? 'Sign In' : 'Sign Up',
+                                            style: const TextStyle(
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.white,
+                                            ),
+                                          ),
                                   ),
                                 ),
                               ),
@@ -422,92 +564,6 @@ class _AuthScreenState extends State<AuthScreen>
         focusedErrorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(15),
           borderSide: const BorderSide(color: Colors.redAccent, width: 2),
-        ),
-      ),
-    );
-  }
-}
-
-// Simple Home Screen for navigation demo
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF0A0E21), Color(0xFF1D1E33)],
-          ),
-        ),
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(30),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: LinearGradient(
-                    colors: [
-                      Colors.purpleAccent.withOpacity(0.8),
-                      Colors.blueAccent.withOpacity(0.8),
-                    ],
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.purpleAccent.withOpacity(0.3),
-                      blurRadius: 30,
-                      spreadRadius: 10,
-                    ),
-                  ],
-                ),
-                child: const Icon(
-                  Icons.check_circle_outline,
-                  size: 80,
-                  color: Colors.white,
-                ),
-              ),
-              const SizedBox(height: 40),
-              const Text(
-                'Welcome to Home!',
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'You\'ve successfully logged in',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.white.withOpacity(0.6),
-                ),
-              ),
-              const SizedBox(height: 40),
-              ElevatedButton.icon(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                icon: const Icon(Icons.arrow_back),
-                label: const Text('Back to Login'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.purpleAccent.withOpacity(0.8),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 30,
-                    vertical: 15,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                ),
-              ),
-            ],
-          ),
         ),
       ),
     );

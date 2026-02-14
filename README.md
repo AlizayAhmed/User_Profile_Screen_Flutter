@@ -1,190 +1,63 @@
-# 🔐 Flutter Login & Signup App
+# 🌐 Week 4: API Integration and Networking
 
-A modern, dark-themed authentication application built with Flutter featuring smooth animations, form validation, and a beautiful user interface.
+## 📡 About This Update
+This update expands the original login/signup app (Week 1) to include API integration, networking, and a user profile page. The app now fetches user and task data from the public [JSONPlaceholder](https://jsonplaceholder.typicode.com/) API, parses JSON responses, and displays them in the UI with robust error handling and loading indicators.
 
-## 📱 About
+## 🚀 New Features (Week 4)
+- 🔗 **API Integration:** Fetches user and todo data from JSONPlaceholder using the `http` package.
+- 🧑 **Profile Page:** Displays user details (name, email, and placeholder avatar) fetched from the API.
+- 📋 **Task List:** Shows a list of todos for the user, parsed from JSON and displayed in a ListView.
+- ⚠️ **Error Handling:** Displays error messages in the UI if API requests fail.
+- ⏳ **Loading Indicators:** Shows a loading spinner while data is being fetched.
+- 🔄 **Network State Management:** Handles loading, success, and error states for all API calls.
 
-This is a Flutter mobile application developed as part of **Week 1** of the Flutter Development Internship. It demonstrates fundamental Flutter concepts including UI building, navigation, form validation, and state management.
+## 🛠️ Technologies Used (Week 4)
+- **http** - For making RESTful API requests
+- **JSON Parsing** - Dart's `dart:convert` for decoding API responses
+- **ListView** - For displaying lists of data
+- **SnackBar** - For error messages
+- **CircularProgressIndicator** - For loading spinners
 
-## ✨ Features
-
-- 🌙 **Dark Mode UI** - Beautiful gradient backgrounds with modern dark theme
-- 🎨 **Smooth Animations** - Fade-in transitions and scale animations for enhanced UX
-- 🔄 **Dynamic Login/Signup Toggle** - Seamlessly switch between login and signup modes
-- ✅ **Form Validation** - Email format validation and password strength checking
-- 👁️ **Password Visibility Toggle** - Show/hide password functionality
-- 🎯 **Navigation** - Proper navigation flow from login to home screen
-- 💳 **Rounded Cards** - Modern card-based layout with rounded corners
-- 🎭 **Gradient Accents** - Purple-blue gradient buttons and icons
-- 📝 **Forgot Password** - Forgot password option (UI ready)
-- ⚡ **Responsive Design** - Adapts to different screen sizes
-
-## 🛠️ Technologies Used
-
-- **Flutter SDK** - UI framework
-- **Dart** - Programming language
-- **Material Design** - Design system
-- **Form Validation** - Built-in Flutter validators
-
-## 📋 Prerequisites
-
-Before running this project, make sure you have:
-
-- Flutter SDK installed (version 3.0.0 or higher)
-- Dart SDK (comes with Flutter)
-- Android Studio / VS Code with Flutter extensions
-- An emulator or physical device for testing
-
-## 🚀 Getting Started
-
-### Installation
-
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/YOUR_USERNAME/flutter-login-app.git
-   cd flutter-login-app
-   ```
-
-2. **Install dependencies**
-   ```bash
-   flutter pub get
-   ```
-
-3. **Run the app**
-   ```bash
-   flutter run
-   ```
-
-### Running on Different Platforms
-
-**Chrome (Web):**
-```bash
-flutter run -d chrome
+## 📂 Updated Project Structure
+```
+lib/
+├── main.dart                # App entry point, navigation, and authentication
+├── models/
+│   ├── user_model.dart      # User model for JSON parsing
+│   └── todo_model.dart      # Todo model for JSON parsing
+├── screens/
+│   └── user_profile_page.dart # Profile page with API integration
+├── services/
+│   └── api_service.dart     # Handles all API/network requests
+├── widgets/
+│   ├── profile_tab.dart     # Profile tab UI
+│   └── tasks_tab.dart       # Tasks tab UI
 ```
 
-**Android Emulator:**
-```bash
-flutter run -d android
-```
+## 🧑‍💻 How API Integration Works
+- The app uses the `http` package to send GET requests to JSONPlaceholder.
+- Responses are parsed from JSON into Dart models (`User`, `Todo`).
+- Data is displayed in the profile and tasks screens using ListView and custom widgets.
+- Errors during network requests are caught and shown to the user via SnackBar.
+- A loading spinner is shown while waiting for API responses.
 
-**iOS Simulator (Mac only):**
-```bash
-flutter run -d ios
-```
+## 🖼️ User Profile Example
+- **Name** and **email** are fetched from the API.
+- **Profile picture** uses user initials or a placeholder avatar (since JSONPlaceholder does not provide images).
 
-**Windows:**
-```bash
-flutter run -d windows
-```
+## 🛡️ Error Handling & Loading
+- All API calls are wrapped in try/catch blocks.
+- If a request fails, a user-friendly error message is shown.
+- While waiting for data, a `CircularProgressIndicator` is displayed.
 
-## 📂 Project Structure
+## 📖 Learning Outcomes (Week 4)
+- Making HTTP requests in Flutter
+- Parsing and displaying JSON data
+- Building responsive UIs with ListView
+- Implementing robust error handling
+- Managing loading and error states in the UI
+- Expanding an app from basic authentication to full API-driven features
 
-```
-login_app/
-├── android/              # Android-specific files
-├── ios/                  # iOS-specific files
-├── lib/
-│   └── main.dart        # Main application file with all code
-├── test/                 # Unit tests
-├── pubspec.yaml         # Dependencies and project configuration
-└── README.md            # This file
-```
-
-## 🎯 Features Implemented (Week 1)
-
-- ✅ Basic Flutter project setup
-- ✅ Login screen UI with email and password fields
-- ✅ Signup screen with additional fields
-- ✅ Email validation (proper email format)
-- ✅ Password validation (minimum 6 characters)
-- ✅ Password confirmation matching
-- ✅ Navigation from login to home screen
-- ✅ Form validation with error messages
-- ✅ Modern UI with animations
-- ✅ Dark theme implementation
-
-## 🔐 Form Validation Rules
-
-| Field | Validation Rule |
-|-------|----------------|
-| Email | Must be valid email format (e.g., user@example.com) |
-| Password | Minimum 6 characters required |
-| Confirm Password | Must match the password field |
-| Full Name | Required for signup (cannot be empty) |
-
-## 🎨 Color Scheme
-
-- **Background Gradient:** Dark blue to purple (`#0A0E21` → `#1D1E33`)
-- **Card Background:** Dark navy (`#1D1E33`)
-- **Input Fields:** Darker shade (`#111328`)
-- **Accent Colors:** Purple-blue gradient (`purpleAccent` → `blueAccent`)
-- **Text:** White with varying opacity for hierarchy
-
-## 🎬 Animations
-
-- **Fade-in Animation:** Entire form fades in on screen load (500ms)
-- **Scale Animation:** Logo scales from 0 to 1 on load (800ms)
-- **Toggle Animation:** Smooth transition when switching between login/signup
-- **Hover Effects:** Button and input field interactions
-
-## 📱 How to Use
-
-1. **Login Mode:**
-   - Enter your email address
-   - Enter your password (minimum 6 characters)
-   - Click "Sign In" to navigate to home screen
-   - Click "Forgot Password?" for password recovery (UI only)
-
-2. **Signup Mode:**
-   - Click "Sign Up" at the bottom
-   - Enter your full name
-   - Enter a valid email address
-   - Create a password (minimum 6 characters)
-   - Confirm your password
-   - Click "Sign Up" to create account
-
-## 📖 Learning Outcomes
-
-Through this project, I learned:
-
-- Flutter widget tree and composition
-- State management using `setState`
-- Form validation techniques
-- Navigation between screens using `Navigator`
-- Animation controllers and Tween animations
-- Material Design principles
-- Gradient styling and theming
-- Responsive UI design
-
-## 📝 Code Highlights
-
-**Custom Text Field with Validation:**
-```dart
-_buildTextField(
-  controller: _emailController,
-  label: 'Email',
-  icon: Icons.email_outlined,
-  validator: (value) {
-    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-      return 'Please enter a valid email';
-    }
-    return null;
-  },
-)
-```
-
-**Gradient Button:**
-```dart
-decoration: BoxDecoration(
-  gradient: LinearGradient(
-    colors: [
-      Colors.purpleAccent.withOpacity(0.8),
-      Colors.blueAccent.withOpacity(0.8),
-    ],
-  ),
-  borderRadius: BorderRadius.circular(15),
-)
-```
 
 
 
